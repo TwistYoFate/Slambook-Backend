@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const salt = "aloo"
 const myPlaintextPassword = 's0/\/\P4$$w0rD';
 const someOtherPlaintextPassword = 'not_bacon';
 
@@ -30,12 +31,20 @@ async function checkUser(username, password) {
 // sync 
 
 function syncPassHash(plain_text_password){
-    return bcrypt.hashSync(plain_text_password, saltRounds);
+    return bcrypt.hashSync(plain_text_password, salt);
+}
+
+function syncPassVerify(plain_text_password, hashed_password){
+    let x = bcrypt.hashSync(plain_text_password,salt)
+    // console.log(x + '\n')
+    // console.log(hashed_password)
+    return (  x==hashed_password );
 }
 
 
 
 module.exports = crypt = {
     createPassword,
-    syncPassHash
+    syncPassHash,
+    syncPassVerify,
 }

@@ -10,12 +10,15 @@ const cors = require('cors');
 // const createPassword = require("./crypt")
 const app = express();
 
+//Body Parser Middleware
+app.use(express.json())
+app.use(express.urlencoded({extended:false}))
 
 //cors permission
 app.use(cors())
 
 
-mongoose.connect(process.env.DATABASE_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(process.env.DATABASE_URI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, });
 const db = mongoose.connection;
 db.on("error", (error) => console.error(error));
 db.once("open", () => console.log("Connected to database"));
@@ -26,9 +29,7 @@ app.get('/',(req,res)=>{
     res.send('Hello');
 })
 
-//Body Parser Middleware
-app.use(express.json())
-app.use(express.urlencoded({extended:false}))
+
 
 
 
