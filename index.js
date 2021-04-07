@@ -10,12 +10,20 @@ const cors = require('cors');
 // const createPassword = require("./crypt")
 const app = express();
 
+//cors permission
+app.use(cors());
+
 //Body Parser Middleware
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 
-//cors permission
-app.use(cors())
+
+// app.use(function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//   next();
+// });
+
 
 
 mongoose.connect(process.env.DATABASE_URI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, });

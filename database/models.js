@@ -54,8 +54,8 @@ const blogSchema = new mongoose.Schema({
             default:0,
         },
         likedBy:{
-            type:Array,
-            default:[]
+            type:Map,
+            default:{}
         }
     },
     timestamp:{

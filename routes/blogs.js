@@ -20,8 +20,21 @@ const router = express.Router()
 //update blog
 
 // Get all blogs
-router.get('/',(req,res)=>{
-    res.json(blogs);
+router.get('/',async (req,res)=>{
+    let blogs=null;
+    try{
+        console.log(blogs);
+        blogs = await Blogs.find();
+        console.log(blogs);
+        if(blogs){  
+            res.status(200).json(new CustomResObj("All blogs fetched successfully",true,{blogs:blogs}));
+        }
+        else{
+            throw error;
+        }
+    }catch(error){
+        res.status(500).json(new CustomResObj("Unable to fetch blogs"));
+    }
 })
 
 //create blog
@@ -95,6 +108,37 @@ router.patch('/update',verifyToken,async (req,res)=>{
         }
     } catch (error) {
         res.status(500).json(new CustomResObj("Unable to update blog"));
+    }
+})
+
+//like-unlike blog
+router.patch('/likeUnlike',verifyToken,async (req,res)=>{
+    // const bid = req.params.id;
+    const username = req.authorizedUser;
+    const payload = {...req.body};
+    console.log("like ,",username," ",payload)
+    let dbBlog = null;
+    try {
+        dbBlog = await Blogs.findById(payload.id);
+        if(dbBlog!==null){
+            if(dbBlog.likes.likedBy.get(username)){
+                dbBlog.likes.likedBy.set(username,false);
+                dbBlog.likes.total-=1;
+                const afterSaveDbBlog = await dbBlog.save();
+                res.status(200).json(new CustomResObj("Unliked Successfully.",true,{id:afterSaveDbBlog.id,likes:afterSaveDbBlog.likes}))
+            }
+            else{
+                dbBlog.likes.likedBy.set(username,true);
+                dbBlog.likes.total+=1;
+                const afterSaveDbBlog = await dbBlog.save();
+                res.status(200).json(new CustomResObj("Liked Successfully.",true,{id:afterSaveDbBlog.id,likes:afterSaveDbBlog.likes}))
+            }
+        }
+        else{
+            throw error;
+        }
+    } catch (error) {
+        res.status(500).json(new CustomResObj("Unable to update likes"));
     }
 })
 

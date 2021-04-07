@@ -15,9 +15,10 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const {userObj} = require('../database/userObj')
 const dao = require('../database/dao')
+const nodemailer = require('nodemailer')
 
 //Importing middlewares/utils
-const {CustomResObj,verifyToken} = require('../utils')
+const {CustomResObj,verifyToken, transporter} = require('../utils')
 
 
 //Importing Schemas to be used
@@ -30,9 +31,11 @@ const router = express.Router()
 
 //signup user
 //login user
+//relogin
 //logout user
 //unregister user
 //update user
+//password reset
 
 // Signup user
 router.post("/signup", async (req,res)=>{
@@ -66,6 +69,8 @@ router.post("/signup", async (req,res)=>{
 // Login user, check credentials and return token
 router.post("/login",authenticationCheck,async (req,res)=>{
     console.log(req.body.sessionLength)
+    console.log(req.body.sessionLength+"h")
+    console.log(req.body)
     if(req.authenticatedUser){
         const user = req.authenticatedUser;
         const returnUser = new userObj(
@@ -76,8 +81,8 @@ router.post("/login",authenticationCheck,async (req,res)=>{
             false
         );
 
-        jwt.sign({ username:returnUser.username,timestamp:Date.now() }, process.env.SECRET_KEY,{expiresIn:parseInt(req.body.sessionLength*60*60)},function(err, token) {
-            if(err){return res.status(500).json(new CustomResObj("Token Error"))} 
+        jwt.sign({ username:returnUser.username,timestamp:Date.now() }, process.env.SECRET_KEY,{expiresIn:req.body.sessionLength+"h"},function(err, token) {
+            if(err){console.log(err);return res.status(500).json(new CustomResObj("Token Error"))} 
             return res.status(200)
             .json(
                 new CustomResObj("Logged in successfully",true,{token,user:returnUser})
@@ -88,6 +93,39 @@ router.post("/login",authenticationCheck,async (req,res)=>{
         return res.status(500).json(new CustomResObj("Unable to login."));
     }
 
+})
+
+// Relogin user via the token
+router.get("/relogin",verifyToken,async (req,res)=>{
+    //token is verified so get the username extracted from token
+    const username = req.authorizedUser
+    console.log("uname, ",username)
+    //use the username to fetch the user details
+    let user = null;
+    try {
+        user = await dao.getDocumentByValue(Users,"username",username);
+        console.log(user)
+        if(!user){
+            throw error;
+        }
+    } catch (error) {
+        return res.status(401).json(new CustomResObj("Unauthenticated user."))
+    }
+    const returnUser = new userObj(
+        user.username,
+        user.email,
+        user.firstName,
+        user.lastName,
+        false
+    );
+    try {
+        return res.status(200)
+        .json(
+            new CustomResObj("Relogged in successfully",true,{token:req.token,user:returnUser})
+        );   
+    } catch (error) {
+        return res.status(500).json(new CustomResObj("Unable to Relogin."));
+    }
 })
 
 //Logout
@@ -122,7 +160,7 @@ router.patch("/update",verifyToken,async (req,res)=>{
         dbUser = await dao.getDocumentByValue(Users,"username",username);
         console.log(dbUser)
         if(dbUser === null){
-            throw error;
+            throw 'error';
         }
     } catch (error) {
         res.status(500).json(new CustomResObj("Unable to fetch user from Database"));
@@ -148,6 +186,39 @@ router.patch("/update",verifyToken,async (req,res)=>{
     }
 })
 
+router.post("/reset",async (req,res)=>{
+    const newPass = bcrypt.hashSync(req.body.email+'_'+Date.now().toString(),parseInt(process.env.SALT_ROUNDS))
+    const newPassHash = bcrypt.hashSync(newPass,parseInt(process.env.SALT_ROUNDS))
+    const mailData = {
+        from: 'echoblaze13@gmail.com',
+        to: req.body.email,
+        subject: 'New Password for reset',
+        text: `Your new password`,
+        html:`Your new password for account on <h2><a href="http://localhost:3000/slambook/home">Slambook</a></h2>
+        is <h4>"${newPass}"<h4>`
+    }
+    try{
+        let newUser = await dao.getDocumentByValue(Users,"email",req.body.email);
+        if(newUser){
+            newUser.password = newPassHash; 
+            newUser.save();
+
+            transporter.sendMail(mailData,(error,info)=>{
+                if(error){
+                    console.log(error)
+                    return res.status(500).json(new CustomResObj("Unable to send mail"));
+                }
+                res.status(200).json(new CustomResObj("Mail sent successfully",true,info))
+            })
+        }
+        else
+            throw 'error';
+    }catch(error){
+        console.log(error)
+        return res.status(500).json(new CustomResObj("Unable to reset password before mail."));
+    }
+})
+
 module.exports = router
 
 
@@ -156,6 +227,7 @@ module.exports = router
 async function authenticationCheck(req,res,next){
     let dbUser = null;
     let payload = {...req.body};
+    console.log("auth ",payload)
     try {
         dbUser = await dao.getDocumentByValue(Users,"username",payload.username);
         if(dbUser && payload){

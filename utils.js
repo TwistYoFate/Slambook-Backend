@@ -1,5 +1,6 @@
 // Utility functions for use in the project
 const jwt = require('jsonwebtoken')
+const nodemailer = require('nodemailer')
 
 function CustomResObj(msg=null,isSuccessful=false,payload=null){
     //call this function using new operator
@@ -9,11 +10,22 @@ function CustomResObj(msg=null,isSuccessful=false,payload=null){
     //it will automatically return this
 }
 
+const transporter = nodemailer.createTransport({
+    port: 465,
+    host: "smtp.gmail.com",
+    auth:{
+        user:"echoblaze13@gmail.com",
+        pass: 'echoblaze13login',
+    },
+    secure:true,
+})
+
 //middlewares
 
 async function verifyToken(req,res,next){
     let token = null;
     token = req.headers['authorization'].split(' ')[1];
+    console.log("token in verify func",token);
     if(!token){
         return res.status(401).json({message:"Unauthorized",isAuthorised:false});
     }
@@ -22,6 +34,7 @@ async function verifyToken(req,res,next){
             return res.status(401).json({message:"Unauthorized",isAuthorised:false});
         }
         req.authorizedUser=user.username;
+        req.token = token;
     })
     next();
 }
@@ -29,4 +42,5 @@ async function verifyToken(req,res,next){
 module.exports = {
     CustomResObj,
     verifyToken,
+    transporter,
 }
