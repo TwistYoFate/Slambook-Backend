@@ -12,7 +12,7 @@
 */
 const express = require("express")
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
+const bcryptjs = require('bcryptjs')
 const {userObj} = require('../database/userObj')
 const dao = require('../database/dao')
 const nodemailer = require('nodemailer')
@@ -52,7 +52,7 @@ router.post("/signup", async (req,res)=>{
         lastName : req.body.lastName,
         username : req.body.username,
         email : req.body.email,
-        password : bcrypt.hashSync(req.body.password,parseInt(process.env.SALT_ROUNDS)),
+        password : bcryptjs.hashSync(req.body.password,parseInt(process.env.SALT_ROUNDS)),
     })
 
     try{
@@ -166,7 +166,7 @@ router.patch("/update",verifyToken,async (req,res)=>{
         res.status(500).json(new CustomResObj("Unable to fetch user from Database"));
     }
 
-    const pass = req.body.password?bcrypt.hashSync(req.body.password,parseInt(process.env.SALT_ROUNDS)):false;
+    const pass = req.body.password?bcryptjs.hashSync(req.body.password,parseInt(process.env.SALT_ROUNDS)):false;
 
     dbUser.firstName = req.body.firstName?req.body.firstName:dbUser.firstName;
     dbUser.lastName = req.body.lastName?req.body.lastName:dbUser.lastName;
@@ -187,8 +187,8 @@ router.patch("/update",verifyToken,async (req,res)=>{
 })
 
 router.post("/reset",async (req,res)=>{
-    const newPass = bcrypt.hashSync(req.body.email+'_'+Date.now().toString(),parseInt(process.env.SALT_ROUNDS))
-    const newPassHash = bcrypt.hashSync(newPass,parseInt(process.env.SALT_ROUNDS))
+    const newPass = bcryptjs.hashSync(req.body.email+'_'+Date.now().toString(),parseInt(process.env.SALT_ROUNDS))
+    const newPassHash = bcryptjs.hashSync(newPass,parseInt(process.env.SALT_ROUNDS))
     const mailData = {
         from: 'echoblaze13@gmail.com',
         to: req.body.email,
@@ -231,7 +231,7 @@ async function authenticationCheck(req,res,next){
     try {
         dbUser = await dao.getDocumentByValue(Users,"username",payload.username);
         if(dbUser && payload){
-            let x = bcrypt.compareSync(payload.password,dbUser.password);
+            let x = bcryptjs.compareSync(payload.password,dbUser.password);
             if(!x){
                 throw error;
             }
