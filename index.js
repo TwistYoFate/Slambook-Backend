@@ -4,6 +4,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser')
 const cors = require('cors');
+const https = require('https')
+const fs = require('fs')
+const path = require('path');
+const { Server } = require('http');
+
 
 // const blogs = require('./db')
 // const md5 = require("md5")
@@ -24,6 +29,11 @@ app.use(express.urlencoded({extended:false}))
 //   next();
 // });
 
+const httpsOptions = {
+    cert:fs.readFileSync(path.join(__dirname,'ssl','server.crt')),
+    key:fs.readFileSync(path.join(__dirname,'ssl','server.key')),
+}
+
 
 
 mongoose.connect(process.env.DATABASE_URI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, });
@@ -39,12 +49,10 @@ app.get('/',(req,res)=>{
 
 
 
-
-
 // Additional routes
 app.use('/auth',require('./routes/auth'))
 app.use('/blogs',require('./routes/blogs'))
 
-
 //Run server
-app.listen('5000',()=>{console.log("listening on port 5000")});
+https.createServer(httpsOptions,app)
+.listen('5000',()=>{console.log("listening on port 5000")});
