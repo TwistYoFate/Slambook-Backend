@@ -53,6 +53,9 @@ app.get('/',(req,res)=>{
 app.use('/auth',require('./routes/auth'))
 app.use('/blogs',require('./routes/blogs'))
 
-//Run server
+//Run prod server
 https.createServer(httpsOptions,app)
 .listen('5000',()=>{console.log("listening on port 5000")});
+
+//dev_serve
+// app.listen('5000',()=>{console.log("listening on port 5000")});
