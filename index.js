@@ -29,10 +29,10 @@ app.use(express.urlencoded({extended:false}))
 //   next();
 // });
 
-const httpsOptions = {
-    cert:fs.readFileSync(path.join(__dirname,'ssl','server.crt')),
-    key:fs.readFileSync(path.join(__dirname,'ssl','server.key')),
-}
+// const httpsOptions = {
+//     cert:fs.readFileSync(path.join(__dirname,'ssl','server.crt')),
+//     key:fs.readFileSync(path.join(__dirname,'ssl','server.key')),
+// }
 
 
 
@@ -54,8 +54,8 @@ app.use('/auth',require('./routes/auth'))
 app.use('/blogs',require('./routes/blogs'))
 
 //Run prod server
-https.createServer(httpsOptions,app)
-.listen('5000',()=>{console.log("listening on port 5000")});
+// https.createServer(httpsOptions,app)
+// .listen('5000',()=>{console.log("listening on port 5000")});
 
 //dev_serve
-// app.listen('5000',()=>{console.log("listening on port 5000")});
+app.listen('5000',()=>{console.log("listening on port 5000")});
