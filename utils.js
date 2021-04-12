@@ -1,6 +1,7 @@
 // Utility functions for use in the project
 const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
+require("dotenv").config()
 
 function CustomResObj(msg=null,isSuccessful=false,payload=null){
     //call this function using new operator
@@ -12,10 +13,10 @@ function CustomResObj(msg=null,isSuccessful=false,payload=null){
 
 const transporter = nodemailer.createTransport({
     port: 465,
-    host: "smtp.gmail.com",
+    host: process.env.SMTP_HOST,
     auth:{
-        user:"echoblaze13@gmail.com",
-        pass: 'echoblaze13login',
+        user:process.env.SMTP_USER_ID,
+        pass: process.env.SMTP_USER_PASS,
     },
     secure:true,
 })

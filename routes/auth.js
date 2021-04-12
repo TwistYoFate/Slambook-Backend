@@ -194,7 +194,7 @@ router.post("/reset",async (req,res)=>{
         to: req.body.email,
         subject: 'New Password for reset',
         text: `Your new password`,
-        html:`Your new password for account on <h2><a href="http://localhost:3000/slambook/home">Slambook</a></h2>
+        html:`Your new password for account on <h2><a href="www.deepanshuyadav.xyz/slambook/home">Slambook</a></h2>
         is <h4>"${newPass}"<h4>`
     }
     try{
